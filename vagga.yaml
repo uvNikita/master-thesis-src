@@ -1,0 +1,131 @@
+containers:
+  master:
+    setup:
+    - !Ubuntu xenial
+    - !UbuntuUniverse
+    - !Py2Requirements "requirements.txt"
+    - !*Unpack
+      - &bing-install
+        - !Py2Requirements "BING/requirements.txt"
+        - !Install
+          - build-essential
+          - libboost-python-dev
+          - python-opencv
+          - libopencv-dev
+      - &caffe-install
+        - !Py2Requirements "caffe/python/requirements.txt"
+        - !Py2Install [pydot]
+        - !Env
+          LD_LIBRARY_PATH: /usr/local/nvidia/lib:/usr/local/nvidia/lib64
+          LIBRARY_PATH: /usr/local/cuda/lib64/stubs
+        - !EnsureDir /storage
+        - !EnsureDir /models
+        - !Depends fix_compat_2.1.patch
+        - !Download
+          url: https://developer.nvidia.com/compute/cuda/8.0/prod/local_installers/cuda-repo-ubuntu1604-8-0-local_8.0.44-1_amd64-deb
+          path: /tmp/cuda-repo-deb
+        - !Install
+          - curl
+          - build-essential
+          - cmake
+          - git
+          - wget
+          - libatlas-base-dev
+          - libboost-all-dev
+          - libgflags-dev
+          - libgoogle-glog-dev
+          - libhdf5-serial-dev
+          - libleveldb-dev
+          - liblmdb-dev
+          - libopencv-dev
+          - libprotobuf-dev
+          - libsnappy-dev
+          - libopenblas-dev
+          - protobuf-compiler
+          - python-dev
+          - python-numpy
+          - python-pip
+          - python-scipy
+          - python-opencv
+          - python-lmdb
+          - python-setuptools
+          - python-pygraphviz
+          - graphviz
+          - util-linux
+          - bsdmainutils
+          - pyqt4-dev-tools
+          - python-qt4
+        - !Sh |
+            dpkg -i /tmp/cuda-repo-deb
+            apt-get update
+            apt-get install -y cuda
+      - &jupyter-install
+        - !Sh |
+            pip install jupyter
+    environ:
+      CAFFE_ROOT: /work/caffe
+      PYTHONPATH: /work/caffe/python:/work/BING/build:/work/BING/source
+      OPENBLAS_NUM_THREADS: 2
+
+      PATH: /usr/local/nvidia/bin:/usr/local/cuda/bin:/work/caffe/build/tools:/work/caffe/python:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+      LD_LIBRARY_PATH: /usr/local/nvidia/lib:/usr/local/nvidia/lib64:/work/caffe/build/lib
+      LIBRARY_PATH: /usr/local/cuda/lib64/stubs
+    volumes:
+      /storage: !BindRW /volumes/master-storage
+      /models: !BindRW /work/models
+      /tmp: !Tmpfs
+        size: 100Mi
+        mode: 0o1777
+        files:
+          .Xauthority: ""
+        subdirs:
+          .X11-unix:
+      /tmp/.X11-unix: !BindRW /volumes/X11
+      /tmp/.Xauthority: !BindRO /volumes/.Xauthority
+
+commands:
+  build-caffe: !Command
+    container: master
+    run: |
+      mkdir -p caffe/build
+      cd caffe/build
+      cmake -DBLAS=open ..
+      make -j"$(nproc)"
+  build-bing: !Command
+    container: master
+    run: |
+      cd BING && make install
+
+  build: !Command
+    container: master
+    prerequisites: [build-bing, build-caffe]
+
+  caffe: !Command
+    container: master
+    run:
+      - caffe
+
+  python: !Command
+    container: master
+    run:
+      - python
+
+  ipython: !Command
+    container: master
+    run:
+      - ipython
+
+  bash: !Command
+    container: master
+    run:
+      - bash
+
+  jupyter: !Command
+    container: master
+    prerequisites: [build-bing, build-caffe]
+    environ:
+      HOME: /tmp
+    run:
+      - jupyter
+      - notebook
+      - --no-browser
