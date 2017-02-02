@@ -94,7 +94,7 @@ commands:
   build-bing: !Command
     container: master
     run: |
-      cd BING && make install
+      cd BING && make
 
   build: !Command
     container: master
