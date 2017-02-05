@@ -64,7 +64,7 @@ containers:
             pip install jupyter
     environ:
       CAFFE_ROOT: /work/caffe
-      PYTHONPATH: /work/caffe/python:/work/BING/build:/work/BING/source
+      PYTHONPATH: /work/caffe/python:/work/caffe/examples/pycaffe:/work/BING/build:/work/BING/source
       OPENBLAS_NUM_THREADS: 2
 
       PATH: /usr/local/nvidia/bin:/usr/local/cuda/bin:/work/caffe/build/tools:/work/caffe/python:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
