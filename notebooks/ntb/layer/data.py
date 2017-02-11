@@ -97,6 +97,7 @@ class BatchLoader(object):
         self.indexlist = self.metadata.keys()
         shuffle(self.indexlist)
         self._cur = 0  # current image
+        self.epoch = 0
         self.transformer = SimpleTransformer()
 
         print "BatchLoader initialized with {} images".format(
@@ -109,6 +110,8 @@ class BatchLoader(object):
         """
         # Did we finish an epoch?
         if self._cur == len(self.indexlist):
+            print("Epoch {} finished".format(self.epoch))
+            self.epoch += 1
             self._cur = 0
             shuffle(self.indexlist)
 
