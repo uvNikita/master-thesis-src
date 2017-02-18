@@ -13,7 +13,29 @@ from random import shuffle
 from threading import Thread
 from PIL import Image
 
-from tools import SimpleTransformer
+class Transformer(object):
+    def __init__(self, mean=[128, 128, 128], shape=[227,227]):
+        self.mean = np.array(mean, dtype=np.float32)
+        self.shape=shape
+
+    def preprocess(self, im):
+        im = scipy.misc.imresize(im, self.shape) # resize
+        im = np.float32(im)
+        im = im[:, :, ::-1]  # change to BGR
+        im -= self.mean
+        im = im.transpose((2, 0, 1))
+
+        return im
+
+    def deprocess(self, im):
+        """
+        inverse of preprocess()
+        """
+        im = im.transpose(1, 2, 0)
+        im += self.mean
+        im = im[:, :, ::-1]  # change to RGB
+
+        return np.uint8(im)
 
 
 class NTBDataLayer(caffe.Layer):
@@ -86,11 +108,10 @@ class BatchLoader(object):
     def __init__(self, params):
         self.batch_size = params['batch_size']
         self.ntb_root = params['ntb_root']
-        self.im_shape = params['im_shape']
         self.num_labels = params['num_labels']
         # parse images metadata
         metada_file_path = os.path.join(
-            self.ntb_root, 'training_data', params['sub_dir'], params['split'] + '.pickle'
+            self.ntb_root, 'nets', params['sub_dir'], 'data', params['split'] + '.pickle'
         )
         with open(metada_file_path) as f:
             self.metadata = pickle.load(f)
@@ -98,7 +119,7 @@ class BatchLoader(object):
         shuffle(self.indexlist)
         self._cur = 0  # current image
         self.epoch = 0
-        self.transformer = SimpleTransformer()
+        self.transformer = Transformer(shape=params['im_shape'])
 
         print "BatchLoader initialized with {} images".format(
             len(self.indexlist)
@@ -121,7 +142,6 @@ class BatchLoader(object):
             self.ntb_root, self.metadata[index]['folder'], index + '.jpg'
         )
         im = np.asarray(Image.open(image_path))
-        im = scipy.misc.imresize(im, self.im_shape)  # resize
 
         # do a simple horizontal flip as data augmentation
         #flip = np.random.choice(2)*2-1
