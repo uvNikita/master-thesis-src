@@ -71,7 +71,8 @@ containers:
       LD_LIBRARY_PATH: /usr/local/nvidia/lib:/usr/local/nvidia/lib64:/work/caffe/build/lib
       LIBRARY_PATH: /usr/local/cuda/lib64/stubs
     volumes:
-      /storage: !BindRW /volumes/master-storage
+      #/storage: !BindRW /volumes/master-storage
+      /storage: !BindRW /work/storage
       /models: !BindRW /work/models
       /tmp: !Tmpfs
         size: 100Mi
