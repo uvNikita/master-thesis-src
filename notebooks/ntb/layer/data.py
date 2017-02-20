@@ -75,8 +75,7 @@ class NTBDataLayer(caffe.Layer):
                     im, multilabel = self.batch_loader.load_next_image()
                     break
                 except ValueError as e:
-                    pass
-                    #print "Error during processing:", e
+                    print e
 
             # Add directly to the caffe data layer
             top[0].data[itt, ...] = im
@@ -155,9 +154,8 @@ class BatchLoader(object):
         self._cur += 1
         try:
             return self.transformer.preprocess(im), multilabel
-        except IndexError as e:
-            # TODO: filter out grayscale images
-            raise ValueError("Probably grayscale image:" + str(index))
+        except Exception as e:
+            raise ValueError("Error during processing {}: {}".format(str(index), str(e)))
 
 
 def check_params(params):
