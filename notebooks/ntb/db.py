@@ -7,11 +7,14 @@ from ete3 import Tree
 from .constants import *
 from .util import *
 
+EXCLUDE = {'sp0c326f', 'sp097c54'}
+
 class NTBDB(object):
     def __init__(self):
         with open(os.path.join(BASE_DIR, 'metadata.pickle')) as md:
             self.metadata = pickle.load(md)
-               
+        for img in EXCLUDE:
+            del self.metadata[img]
         self.by_tag = dict()
         for p in self.metadata.itervalues():
             for tag in p['tags']:
