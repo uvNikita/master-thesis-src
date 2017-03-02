@@ -7,6 +7,7 @@ Pillow>=3.4.2
 python-qt>=0.50
 scipy>=0.18.1
 wurlitzer>=0.2.0
+seaborn>=0.7.1
 
 pyparsing>=2.1.10
 cycler>=0.10.0
