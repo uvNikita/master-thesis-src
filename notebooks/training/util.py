@@ -4,6 +4,7 @@ import caffe
 from collections import defaultdict
 from caffe import layers as L
 from caffe import params as P
+from caffe import to_proto
 
 
 def balance_dataset(dataset, limit=10000):
@@ -120,30 +121,18 @@ def caffenet_multilabel_sigmoid(name, num_labels, data_layer_params=None, is_tes
     return name_field + '\n' + str(net.to_proto())
 
 
-def caffenet(lmdb, batch_size=256, include_acc=False):
-    data, label = L.Data(source=lmdb, backend=P.Data.LMDB, batch_size=batch_size, ntop=2,
-        transform_param=dict(crop_size=227, mean_value=[104, 117, 123], mirror=True))
+def caffenet(name, lmdb, num_labels, mean_file, batch_size=256, mean_value=[128, 128, 128], include_acc=False, mirror=True):
+    net = caffe.NetSpec()
+    net.data, net.label = L.Data(
+        source=lmdb, backend=P.Data.LMDB, batch_size=batch_size, ntop=2,
+        transform_param=dict(crop_size=227, mean_file=mean_file, mirror=mirror)
+    )
 
     # the net itself
-    conv1, relu1 = conv_relu(data, 11, 96, stride=4)
-    pool1 = max_pool(relu1, 3, stride=2)
-    norm1 = L.LRN(pool1, local_size=5, alpha=1e-4, beta=0.75)
-    conv2, relu2 = conv_relu(norm1, 5, 256, pad=2, group=2)
-    pool2 = max_pool(relu2, 3, stride=2)
-    norm2 = L.LRN(pool2, local_size=5, alpha=1e-4, beta=0.75)
-    conv3, relu3 = conv_relu(norm2, 3, 384, pad=1)
-    conv4, relu4 = conv_relu(relu3, 3, 384, pad=1, group=2)
-    conv5, relu5 = conv_relu(relu4, 3, 256, pad=1, group=2)
-    pool5 = max_pool(relu5, 3, stride=2)
-    fc6, relu6 = fc_relu(pool5, 4096)
-    drop6 = L.Dropout(relu6, in_place=True)
-    fc7, relu7 = fc_relu(drop6, 4096)
-    drop7 = L.Dropout(relu7, in_place=True)
-    fc8 = L.InnerProduct(drop7, num_output=1000)
-    loss = L.SoftmaxWithLoss(fc8, label)
+    net = add_caffenet(net, num_labels)
+    net.loss = L.SoftmaxWithLoss(net.score, net.label)
 
+    name_field = 'name: "{}"'.format(name)
     if include_acc:
-        acc = L.Accuracy(fc8, label)
-        return to_proto(loss, acc)
-    else:
-        return to_proto(loss)
+        net.acc = L.Accuracy(net.score, net.label)
+    return name_field + '\n' + str(net.to_proto())
