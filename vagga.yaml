@@ -19,11 +19,16 @@ containers:
           LD_LIBRARY_PATH: /usr/local/nvidia/lib:/usr/local/nvidia/lib64
           LIBRARY_PATH: /usr/local/cuda/lib64/stubs
         - !EnsureDir /storage
-        - !EnsureDir /models
-        - !Depends fix_compat_2.1.patch
-        - !Download
-          url: https://developer.nvidia.com/compute/cuda/8.0/prod/local_installers/cuda-repo-ubuntu1604-8-0-local_8.0.44-1_amd64-deb
-          path: /tmp/cuda-repo-deb
+        - !UbuntuRepo
+          url: http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64
+          components: [/]
+          suite: ""
+          trusted: true
+        - !Install
+          - cuda-8-0
+        - !Tar
+          url: http://developer.download.nvidia.com/compute/redist/cudnn/v5.1/cudnn-8.0-linux-x64-v5.1.tgz
+          path: /usr/local
         - !Install
           - curl
           - build-essential
@@ -55,10 +60,6 @@ containers:
           - bsdmainutils
           - pyqt4-dev-tools
           - python-qt4
-        - !Sh |
-            dpkg -i /tmp/cuda-repo-deb
-            apt-get update
-            apt-get install -y cuda
       - &jupyter-install
         - !Sh |
             pip install jupyter
@@ -73,9 +74,8 @@ containers:
     volumes:
       #/storage: !BindRW /volumes/master-storage
       /storage: !BindRW /work/storage
-      /models: !BindRW /work/models
       /tmp: !Tmpfs
-        size: 100Mi
+        size: 500Mi
         mode: 0o1777
         files:
           .Xauthority: ""
@@ -90,7 +90,7 @@ commands:
     run: |
       mkdir -p caffe/build
       cd caffe/build
-      cmake -DBLAS=open ..
+      cmake -DUSE_CUDNN=1 -DBLAS=open ..
       make -j"$(nproc)"
   build-bing: !Command
     container: master
