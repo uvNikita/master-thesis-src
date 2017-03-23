@@ -7,6 +7,8 @@ from caffe import params as P
 from caffe import to_proto
 
 
+NETS_DIR = '/storage/nets'
+
 def balance_dataset(dataset, limit=10000):
     img_pools = {label: list(imgs) for label, imgs in dataset.items()}
     balanced = defaultdict(set)
