@@ -8,6 +8,7 @@ from caffe import to_proto
 
 
 NETS_DIR = '/storage/nets'
+DATASETS_DIR = '/storage/datasets'
 
 def balance_dataset(dataset, limit=10000):
     img_pools = {label: list(imgs) for label, imgs in dataset.items()}
