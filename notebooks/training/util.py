@@ -142,14 +142,18 @@ def caffenet(name, lmdb, num_labels, mean_file, batch_size=256, mean_value=[128,
 
 
 def caffenet_multilabel_lmdb(name, data_lmdb, labels_lmdb, num_labels, mean_file, batch_size=256, mirror=False, is_test=False):
+    assert is_test or data_lmdb and labels_lmdb and mean_file
     net = caffe.NetSpec()
-    net.data= L.Data(
-        source=data_lmdb, backend=P.Data.LMDB, batch_size=batch_size,
-        transform_param=dict(mean_file=mean_file, mirror=mirror)
-    )
-    net.label = L.Data(
-        source=labels_lmdb, backend=P.Data.LMDB, batch_size=batch_size,
-    )
+    if is_test:
+        net.data = L.Input(input_param={"shape": {"dim": [1, 3, 227, 227]}})
+    else:
+        net.data= L.Data(
+            source=data_lmdb, backend=P.Data.LMDB, batch_size=batch_size,
+            transform_param=dict(mean_file=mean_file, mirror=mirror)
+        )
+        net.label = L.Data(
+            source=labels_lmdb, backend=P.Data.LMDB, batch_size=batch_size,
+        )
 
     # the net itself
     net = add_caffenet(net, num_labels)
