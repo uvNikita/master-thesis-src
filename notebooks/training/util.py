@@ -139,3 +139,26 @@ def caffenet(name, lmdb, num_labels, mean_file, batch_size=256, mean_value=[128,
     if include_acc:
         net.acc = L.Accuracy(net.score, net.label)
     return name_field + '\n' + str(net.to_proto())
+
+
+def caffenet_multilabel_lmdb(name, data_lmdb, labels_lmdb, num_labels, mean_file, batch_size=256, mirror=False, is_test=False):
+    net = caffe.NetSpec()
+    net.data= L.Data(
+        source=data_lmdb, backend=P.Data.LMDB, batch_size=batch_size,
+        transform_param=dict(mean_file=mean_file, mirror=mirror)
+    )
+    net.label = L.Data(
+        source=labels_lmdb, backend=P.Data.LMDB, batch_size=batch_size,
+    )
+
+    # the net itself
+    net = add_caffenet(net, num_labels)
+    
+    # Changed loss function
+    if is_test:
+        net.prob = L.Sigmoid(net.fc7)
+    else:
+        net.loss = L.SigmoidCrossEntropyLoss(net.score, net.label)
+    
+    name_field = 'name: "{}"'.format(name)
+    return name_field + '\n' + str(net.to_proto())
