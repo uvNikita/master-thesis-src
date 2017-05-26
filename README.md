@@ -11,6 +11,6 @@ The [notebooks](https://github.com/uvNikita/master-thesis-src/tree/master/notebo
 
 * [metadata.ipynb](https://github.com/uvNikita/master-thesis-src/blob/master/notebooks/metadata.ipynb) contain the whole pipeline of metadata parsing, translation and restructuring. This file is the most dataset-specific. However, it can serve as an example of how the final structure should look like to work with other parts of the project.
 * [database.ipynb](https://github.com/uvNikita/master-thesis-src/blob/master/notebooks/database.ipynb) contain general analysis of the used dataset.
-* [training])(https://github.com/uvNikita/master-thesis-src/blob/master/notebooks/training) folder has several notebooks. Each of them represents one training process for each combination of category and network selection.
+* [training](https://github.com/uvNikita/master-thesis-src/blob/master/notebooks/training) folder has several notebooks. Each of them represents one training process for each combination of category and network selection.
 * [testing](https://github.com/uvNikita/master-thesis-src/blob/master/notebooks/testing) folder contain one testing notebook where all trained networks are analyzed and compared.
 * [ntb](https://github.com/uvNikita/master-thesis-src/blob/master/notebooks/ntb) folder contain additional library tools that were written used in the process.
